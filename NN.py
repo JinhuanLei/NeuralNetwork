@@ -1,6 +1,6 @@
-import networkx as nx
 import os
 import re
+import numpy as np
 
 CURRENT_PATH = os.path.dirname(__file__)
 
@@ -54,9 +54,52 @@ def loadData(resolution):
             regExpList = re.findall(r'[(](.*?)[)]', line)
             testSet.append(list(map(float, regExpList[0].split(" "))))
             testLabel.append(list(map(float, regExpList[1].split(" "))))
-    print("length", len(testSet), "  ", len(testLabel))
-    print(testSet[0])
-    print(testLabel[0])
+    initNeurons(trainSet, trainLable, testSet, testLabel)
+
+
+def initWeights():
+    pass
+
+
+def initNeurons(trainSet, trainLable, testSet, testLabel):
+    hiddenLayers = initHiddenLayer()
+    inputLayer = initInputLayer(len(trainSet[0]))
+    outputLayer = initOutputLayer(len(trainLable[0]))
+
+
+def initHiddenLayer():
+    hiddenLayerDepth = int(input("Number of hidden layers: "))
+    hiddenLayers = []
+    depthCount = 0
+    while depthCount < hiddenLayerDepth:
+        hiddenLayerSize = int(input("Size of hidden layer " + str(depthCount) + ":"))
+        curLayer = []
+        for i in range(hiddenLayerSize):
+            tag = "hidden_" + str(depthCount) + "_neuron_" + str(i)
+            neuron = Neuron(tag, [])
+            curLayer.append(neuron)
+        hiddenLayers.append(curLayer)
+        depthCount += 1
+    # print(hiddenLayers)
+    return hiddenLayers
+
+
+def initInputLayer(size):
+    inputLayer = []
+    for i in range(size):
+        tag = "input_" + "neuron_" + str(i)
+        inputNeuron = Neuron(tag, [])
+        inputLayer.append(inputNeuron)
+    return inputLayer
+
+
+def initOutputLayer(size):
+    outputLayer = []
+    for i in range(size):
+        tag = "output_" + "neuron_" + str(i)
+        outputNeuron = Neuron(tag, [])
+        outputLayer.append(outputNeuron)
+    return outputLayer
 
 
 class Neuron(object):
