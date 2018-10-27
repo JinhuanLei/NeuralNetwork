@@ -57,14 +57,38 @@ def loadData(resolution):
     initNeurons(trainSet, trainLable, testSet, testLabel)
 
 
-def initWeights():
-    pass
+def initWeightHelper(dim):
+    w = np.random.rand(dim, 1)
+    b = np.random.rand()
+    return w, b
+
+
+def initWeight(network):
+    for i in range(1,len(network)):
+        preLayerSize = len(network[i-1])
+        for neuron in network[i]:
+            w,b = initWeightHelper(preLayerSize)
+            neuron.setWeight(w)
+            neuron.setBias(b)
+    return network
+
+
+
 
 
 def initNeurons(trainSet, trainLable, testSet, testLabel):
     hiddenLayers = initHiddenLayer()
     inputLayer = initInputLayer(len(trainSet[0]))
     outputLayer = initOutputLayer(len(trainLable[0]))
+    network = []
+    network.append(inputLayer)
+    network = network + hiddenLayers
+    network.append(outputLayer)
+    network =initWeight(network)
+    print(network[1][0].bias)
+
+
+
 
 
 def initHiddenLayer():
@@ -106,6 +130,15 @@ class Neuron(object):
     def __init__(self, tag, linkedNeurons):
         self.tag = tag
         self.linkedNeurons = linkedNeurons
+
+    def setWeight(self, weight):
+        self.weight = weight
+
+
+    def setBias(self, bias):
+        self.bias = bias
+
+
 
 
 if __name__ == "__main__":
