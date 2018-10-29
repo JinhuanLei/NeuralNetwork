@@ -23,8 +23,6 @@ def getInputs():
             if resolution != "5" and resolution != "10" and resolution != "15" and resolution != "20":
                 continue
             else:
-                print("Load Training Set.")
-                print("Load Testing Set.")
                 loadData(resolution)
                 return
     else:
@@ -42,6 +40,7 @@ def loadData(resolution):
     testSetFilePath = CURRENT_PATH + "/" + "testSet_data/" + testSetFileName
     if not (os.path.exists(trainSetPath) and os.path.exists(testSetFilePath)):
         print("Can not find the file, NN.py should in the same folder with the trainSet_data and testSet_data")
+        return
     trainSet = []
     trainLable = []
     testSet = []
@@ -54,6 +53,7 @@ def loadData(resolution):
             regExpList = re.findall(r'[(](.*?)[)]', line)
             trainSet.append(list(map(float, regExpList[0].split(" "))))
             trainLable.append(list(map(float, regExpList[1].split(" "))))
+    print("Load Training Set.")
     with open(testSetFilePath, "r") as f:
         for line in f.readlines():
             line = line.strip()
@@ -62,7 +62,20 @@ def loadData(resolution):
             regExpList = re.findall(r'[(](.*?)[)]', line)
             testSet.append(list(map(float, regExpList[0].split(" "))))
             testLabel.append(list(map(float, regExpList[1].split(" "))))
+    print("Load Testing Set.")
+    normaliseData(int(resolution))
     initNeurons(trainSetFileName, testSetFileName)
+
+
+def normaliseData(resolution):
+    global trainSet, testSet
+    count = resolution * resolution
+    for x in range(len(trainSet)):
+        for i in range(len(trainSet[0]) - count, len(trainSet[0])):
+            trainSet[x][i] = trainSet[x][i] / 255
+    for x in range(len(testSet)):
+        for i in range(len(testSet[0]) - count, len(testSet[0])):
+            testSet[x][i] = testSet[x][i] / 255
 
 
 def initNeurons(trainSetFileName, testSetFileName):
@@ -94,20 +107,12 @@ def validateNetwork(network, testSetFileName):
                 # print(len(a), "______________", neo.bias)
                 newAVal = np.dot(a, input) + neo.bias  # can not reverse order (65, ) dot (65, 1)
                 neo.setActivationFunctionOutput(sigmoid(newAVal))
-        countNeuron = 0
-        flag = 1
+        outputVector = []
         for neu in network[len(network) - 1]:
-            y = lable[countNeuron]
-            judge = 0
-            if(neu.aVal>0):
-                judge = 1
-            else:
-                judge = 0
-            if y != judge:
-                flag = 0
-                break
-            countNeuron += 1
-        if flag == 1:
+            outputVector.append(neu.aVal)
+        maxVal = max(outputVector)           # always same (super close)value
+        maxIndex = outputVector.index(maxVal)
+        if lable[maxIndex] == 1.0:
             correct += 1
     print("Accuracy achieved: ", correct / len(testSet))
 
@@ -115,9 +120,11 @@ def validateNetwork(network, testSetFileName):
 def backPropagationLearning(network, trainSetFileName):
     # Propagate the inputs forward to compute the outputs
     print("Training on " + trainSetFileName + "...")
-    for num in range(50):
+    for num in range(100):
+        maxError = 0.0
         for (timage, tlable) in zip(trainSet, trainLable):
-            # input layer
+            # Input layer
+            # Activation output for input layer is input value
             countNeuron = 0
             for neu in network[0]:
                 neu.setActivationFunctionOutput(timage[countNeuron])
@@ -131,28 +138,43 @@ def backPropagationLearning(network, trainSetFileName):
                     neo.setActivationFunctionOutput(sigmoid(newAVal))
             # Propagate deltas backward from output layer to input layer    Some problems
             # output layer
-            countNeuron = 0
-            deltaVal = 0
+            countNeuron1 = 0
+            deltaSet = []  # length: len(network) - 1  input layer do not have weights sets
+            outputDeltaSet = []
             for neu in network[len(network) - 1]:
-                y = tlable[countNeuron]
+                y = tlable[countNeuron1]
                 derivativeVal = getDerivativeVal(neu.aVal)
-                # if y - neu.aVal < 0.01:
-                #     print("Opps")
-                #     return network
+                if abs(y - neu.aVal) > maxError:
+                    maxError = abs(y - neu.aVal)
                 deltaVal = derivativeVal * (y - neu.aVal)
-                countNeuron += 1
-                # Update every weight in network using deltas
+                outputDeltaSet.append(deltaVal)
+                countNeuron1 += 1
+            deltaSet.insert(0, outputDeltaSet)
             for i in range(len(network) - 2, 0, -1):
+                hiddenDeltaSet = []
                 count = 0
                 for neu in network[i]:
-                    a = getActivationOutputVector(network[i - 1])
-                    oldWeight = getWeightVectorFromLastLayer(network, count, i + 1)
+                    # a = getActivationOutputVector(network[i - 1])
+                    preWeight = getWeightVectorFromLastLayer(network, count, i + 1)
                     derivativeVal = getDerivativeVal(neu.aVal)
-                    newDelta = getNewDeltaVal(deltaVal, oldWeight, derivativeVal)
+                    preDelta = deltaSet[0]
+                    newDelta = getNewDeltaVal(preDelta, preWeight, derivativeVal)
+                    hiddenDeltaSet.append(newDelta)
+                    count += 1
+                deltaSet.insert(0, hiddenDeltaSet)
+            # Update every weight in network using deltas
+            # Assume there is a correct delta dataset
+            for i in range(1, len(network)):
+                for n in range(len(network[i])):
+                    neu = network[i][n]
+                    newDelta = deltaSet[i - 1][n]
+                    a = getActivationOutputVector(network[i - 1])
                     for j in range(len(neu.weight)):
                         neu.weight[j] = neu.weight[j] + newDelta * a[j]
-                    neu.bias = neu.bias + newDelta  # dummy value always 1 ??
-                    count += 1
+                    neu.bias = neu.bias + newDelta
+        if maxError < 0.01:
+            print("Oppppps")
+            return network
     return network
 
 
@@ -166,6 +188,8 @@ def getActivationOutputVector(layer):
 
 def sigmoid(z):
     s = 1 / (1 + math.exp(-z))
+    # if s == 1:
+    #     s = 0.999
     return s
 
 
@@ -185,10 +209,10 @@ def initWeight(network):
     return network
 
 
-def getNewDeltaVal(deltaVal, oldWeight, derivativeVal):
+def getNewDeltaVal(preDelta, oldWeight, derivativeVal):
     count = 0.0
-    for w in oldWeight:
-        count = count + deltaVal * w
+    for (d,w) in zip(preDelta,oldWeight):
+        count = count + d * w
     return count * derivativeVal
 
 
