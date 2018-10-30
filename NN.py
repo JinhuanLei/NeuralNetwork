@@ -118,10 +118,10 @@ def validateNetwork(network, testSetFileName):
 
 
 def backPropagationLearning(network, trainSetFileName):
-    # Propagate the inputs forward to compute the outputs
     print("Training on " + trainSetFileName + "...")
-    for num in range(100):
+    for epoch in range(10):                         # Change the epoche maxError did not change,and accurate
         maxError = 0.0
+        # Propagate the inputs forward to compute the outputs
         for (timage, tlable) in zip(trainSet, trainLable):
             # Input layer
             # Activation output for input layer is input value
@@ -130,12 +130,12 @@ def backPropagationLearning(network, trainSetFileName):
                 neu.setActivationFunctionOutput(timage[countNeuron])
                 countNeuron += 1
             for i in range(1, len(network)):
-                for neo in network[i]:
-                    input = neo.weight
+                for neu in network[i]:
+                    input = neu.weight
                     a = getActivationOutputVector(network[i - 1])
                     # print(len(a), "______________", neo.bias)
-                    newAVal = np.dot(a, input) + neo.bias  # can not reverse order (65, ) dot (65, 1)
-                    neo.setActivationFunctionOutput(sigmoid(newAVal))
+                    newAVal = np.dot(a, input) + neu.bias  # can not reverse order (65, ) dot (65, 1)
+                    neu.setActivationFunctionOutput(sigmoid(newAVal))
             # Propagate deltas backward from output layer to input layer    Some problems
             # output layer
             countNeuron1 = 0
@@ -159,7 +159,7 @@ def backPropagationLearning(network, trainSetFileName):
                     derivativeVal = getDerivativeVal(neu.aVal)
                     preDelta = deltaSet[0]
                     newDelta = getNewDeltaVal(preDelta, preWeight, derivativeVal)
-                    hiddenDeltaSet.append(newDelta)
+                    hiddenDeltaSet.append(newDelta[0])
                     count += 1
                 deltaSet.insert(0, hiddenDeltaSet)
             # Update every weight in network using deltas
