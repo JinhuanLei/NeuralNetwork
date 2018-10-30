@@ -119,7 +119,7 @@ def validateNetwork(network, testSetFileName):
 
 def backPropagationLearning(network, trainSetFileName):
     print("Training on " + trainSetFileName + "...")
-    for epoch in range(10):                         # Change the epoche maxError did not change,and accurate
+    for epoch in range(20):                         # Change the epoche maxError did not change,and accurate
         maxError = 0.0
         # Propagate the inputs forward to compute the outputs
         for (timage, tlable) in zip(trainSet, trainLable):
@@ -147,6 +147,10 @@ def backPropagationLearning(network, trainSetFileName):
                 if abs(y - neu.aVal) > maxError:
                     maxError = abs(y - neu.aVal)
                 deltaVal = derivativeVal * (y - neu.aVal)
+                a = getActivationOutputVector(network[len(network) - 2])
+                for j in range(len(neu.weight)):
+                    neu.weight[j] = neu.weight[j] + deltaVal * a[j]
+                neu.bias = neu.bias + deltaVal
                 outputDeltaSet.append(deltaVal)
                 countNeuron1 += 1
             deltaSet.insert(0, outputDeltaSet)
@@ -159,19 +163,23 @@ def backPropagationLearning(network, trainSetFileName):
                     derivativeVal = getDerivativeVal(neu.aVal)
                     preDelta = deltaSet[0]
                     newDelta = getNewDeltaVal(preDelta, preWeight, derivativeVal)
+                    a = getActivationOutputVector(network[i - 1])
+                    for j in range(len(neu.weight)):
+                        neu.weight[j] = neu.weight[j] + newDelta * a[j]
+                    neu.bias = neu.bias + newDelta
                     hiddenDeltaSet.append(newDelta[0])
                     count += 1
                 deltaSet.insert(0, hiddenDeltaSet)
             # Update every weight in network using deltas
             # Assume there is a correct delta dataset
-            for i in range(1, len(network)):
-                for n in range(len(network[i])):
-                    neu = network[i][n]
-                    newDelta = deltaSet[i - 1][n]
-                    a = getActivationOutputVector(network[i - 1])
-                    for j in range(len(neu.weight)):
-                        neu.weight[j] = neu.weight[j] + newDelta * a[j]
-                    neu.bias = neu.bias + newDelta
+            # for i in range(1, len(network)):
+            #     for n in range(len(network[i])):
+            #         neu = network[i][n]
+            #         newDelta = deltaSet[i - 1][n]
+            #         a = getActivationOutputVector(network[i - 1])
+            #         for j in range(len(neu.weight)):
+            #             neu.weight[j] = neu.weight[j] + newDelta * a[j]
+            #         neu.bias = neu.bias + newDelta
         if maxError < 0.01:
             print("Oppppps")
             return network
