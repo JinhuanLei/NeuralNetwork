@@ -134,7 +134,7 @@ def backPropagationLearning(network, trainSetFileName):
                     input = neu.weight
                     a = getActivationOutputVector(network[i - 1])
                     # print(len(a), "______________", neo.bias)
-                    newAVal = np.dot(a, input) + neu.bias  # can not reverse order (65, ) dot (65, 1)
+                    newAVal = np.dot(a, input) + neu.bias  #  shape (65, ) dot shape (65, 1)
                     neu.setActivationFunctionOutput(sigmoid(newAVal))
             # Propagate deltas backward from output layer to input layer    Some problems
             # output layer
