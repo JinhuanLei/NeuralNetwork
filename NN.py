@@ -88,7 +88,8 @@ def initNeurons(trainSetFileName, testSetFileName):
     network = network + hiddenLayers
     network.append(outputLayer)
     network = initWeight(network)
-    trainedNetwork = backPropagationLearning(network, trainSetFileName)
+    print("Training on " + trainSetFileName + "...")
+    trainedNetwork = backPropagationLearning(network)
     validateNetwork(trainedNetwork, testSetFileName)
 
 
@@ -120,13 +121,12 @@ def validateNetwork(network, testSetFileName):
     print("Accuracy achieved: ", correct / len(testSet))
 
 
-def backPropagationLearning(network, trainSetFileName):
-    # Propagate the inputs forward to compute the outputs
-    print("Training on " + trainSetFileName + "...")
+def backPropagationLearning(network):
     # global trainSet, trainLable
-    # trainSet = trainSet[0:3]
-    # trainLable = trainLable[0:3]
-    for epoch in range(50):
+    # trainSet = trainSet[0:1]
+    # trainLable = trainLable[0:1]
+    # Propagate the inputs forward to compute the outputs
+    for epoch in range(10):
         maxError = 0.0
         for (timage, tlable) in zip(trainSet, trainLable):
             # Input layer
@@ -142,15 +142,14 @@ def backPropagationLearning(network, trainSetFileName):
                     # print(len(a), "______________", neo.bias)
                     newAVal = np.dot(a, input) + neu.bias  # shape (65, ) dot shape (65, 1)
                     neu.setActivationFunctionOutput(sigmoid(newAVal))
-            # Propagate deltas backward from output layer to input layer    Some problems
+            # Propagate deltas backward from output layer to input layer
             # output layer
             countNeuron1 = 0
-            deltaSet = []  # length: len(network) - 1  input layer do not have weights sets
-            # outputDeltaSet = []
+            deltaSet = []  # length: len(network) - 1
             for neu in network[len(network) - 1]:
                 y = tlable[countNeuron1]
                 derivativeVal = getDerivativeVal(neu.aVal)
-                errorValue = (y - neu.aVal)  ##################
+                errorValue = (y - neu.aVal)
                 if abs(errorValue) > maxError:
                     maxError = abs(errorValue)
                 deltaVal = derivativeVal * errorValue
@@ -171,7 +170,16 @@ def backPropagationLearning(network, trainSetFileName):
                 # deltaSet.insert(0, hiddenDeltaSet)
             # Update every weight in network using deltas
             # Assume there is a correct delta dataset
-            for i in range(1, len(network)):
+            # for i in range(1, len(network)):
+            #     for n in range(len(network[i])):
+            #         neu = network[i][n]
+            #         newDelta = neu.delta
+            #         a = getActivationOutputVector(network[i - 1])
+            #         for j in range(len(neu.weight)):
+            #             neu.weight[j] = neu.weight[j] + newDelta * a[j]
+            #         neu.bias = neu.bias + newDelta
+            ####
+            for i in range(len(network)-1, 0,-1):
                 for n in range(len(network[i])):
                     neu = network[i][n]
                     newDelta = neu.delta
