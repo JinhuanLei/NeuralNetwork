@@ -93,6 +93,9 @@ def initNeurons(trainSetFileName, testSetFileName):
 
 
 def validateNetwork(network, testSetFileName):
+    # global testSet, testLabel
+    # testSet = trainSet[0:1]
+    # testLabel = trainLable[0:1]
     print("Testing on " + testSetFileName + "...")
     correct = 0
     for (image, lable) in zip(testSet, testLabel):
@@ -110,7 +113,7 @@ def validateNetwork(network, testSetFileName):
         outputVector = []
         for neu in network[len(network) - 1]:
             outputVector.append(neu.aVal)
-        maxVal = max(outputVector)           # always same (super close)value
+        maxVal = max(outputVector)  # always same (super close)value
         maxIndex = outputVector.index(maxVal)
         if lable[maxIndex] == 1.0:
             correct += 1
@@ -118,10 +121,13 @@ def validateNetwork(network, testSetFileName):
 
 
 def backPropagationLearning(network, trainSetFileName):
+    # Propagate the inputs forward to compute the outputs
     print("Training on " + trainSetFileName + "...")
-    for epoch in range(20):                         # Change the epoche maxError did not change,and accurate
+    # global trainSet, trainLable
+    # trainSet = trainSet[0:3]
+    # trainLable = trainLable[0:3]
+    for epoch in range(50):
         maxError = 0.0
-        # Propagate the inputs forward to compute the outputs
         for (timage, tlable) in zip(trainSet, trainLable):
             # Input layer
             # Activation output for input layer is input value
@@ -134,56 +140,56 @@ def backPropagationLearning(network, trainSetFileName):
                     input = neu.weight
                     a = getActivationOutputVector(network[i - 1])
                     # print(len(a), "______________", neo.bias)
-                    newAVal = np.dot(a, input) + neu.bias  #  shape (65, ) dot shape (65, 1)
+                    newAVal = np.dot(a, input) + neu.bias  # shape (65, ) dot shape (65, 1)
                     neu.setActivationFunctionOutput(sigmoid(newAVal))
             # Propagate deltas backward from output layer to input layer    Some problems
             # output layer
             countNeuron1 = 0
             deltaSet = []  # length: len(network) - 1  input layer do not have weights sets
-            outputDeltaSet = []
+            # outputDeltaSet = []
             for neu in network[len(network) - 1]:
                 y = tlable[countNeuron1]
                 derivativeVal = getDerivativeVal(neu.aVal)
-                if abs(y - neu.aVal) > maxError:
-                    maxError = abs(y - neu.aVal)
-                deltaVal = derivativeVal * (y - neu.aVal)
-                a = getActivationOutputVector(network[len(network) - 2])
-                for j in range(len(neu.weight)):
-                    neu.weight[j] = neu.weight[j] + deltaVal * a[j]
-                neu.bias = neu.bias + deltaVal
-                outputDeltaSet.append(deltaVal)
+                errorValue = (y - neu.aVal)  ##################
+                if abs(errorValue) > maxError:
+                    maxError = abs(errorValue)
+                deltaVal = derivativeVal * errorValue
+                neu.setDelta(deltaVal)
                 countNeuron1 += 1
-            deltaSet.insert(0, outputDeltaSet)
+            # deltaSet.insert(0, outputDeltaSet)
             for i in range(len(network) - 2, 0, -1):
-                hiddenDeltaSet = []
+                # hiddenDeltaSet = []
                 count = 0
                 for neu in network[i]:
                     # a = getActivationOutputVector(network[i - 1])
                     preWeight = getWeightVectorFromLastLayer(network, count, i + 1)
                     derivativeVal = getDerivativeVal(neu.aVal)
-                    preDelta = deltaSet[0]
-                    newDelta = getNewDeltaVal(preDelta, preWeight, derivativeVal)
+                    preDelta = getDeltaVector(network[i + 1])
+                    newDelta = getNewDeltaVal(preDelta, preWeight, derivativeVal)[0]
+                    neu.setDelta(newDelta)
+                    count += 1
+                # deltaSet.insert(0, hiddenDeltaSet)
+            # Update every weight in network using deltas
+            # Assume there is a correct delta dataset
+            for i in range(1, len(network)):
+                for n in range(len(network[i])):
+                    neu = network[i][n]
+                    newDelta = neu.delta
                     a = getActivationOutputVector(network[i - 1])
                     for j in range(len(neu.weight)):
                         neu.weight[j] = neu.weight[j] + newDelta * a[j]
                     neu.bias = neu.bias + newDelta
-                    hiddenDeltaSet.append(newDelta[0])
-                    count += 1
-                deltaSet.insert(0, hiddenDeltaSet)
-            # Update every weight in network using deltas
-            # Assume there is a correct delta dataset
-            # for i in range(1, len(network)):
-            #     for n in range(len(network[i])):
-            #         neu = network[i][n]
-            #         newDelta = deltaSet[i - 1][n]
-            #         a = getActivationOutputVector(network[i - 1])
-            #         for j in range(len(neu.weight)):
-            #             neu.weight[j] = neu.weight[j] + newDelta * a[j]
-            #         neu.bias = neu.bias + newDelta
         if maxError < 0.01:
             print("Oppppps")
             return network
     return network
+
+
+def getDeltaVector(layer):
+    vector = []
+    for neu in layer:
+        vector.append(neu.delta)
+    return vector
 
 
 def getActivationOutputVector(layer):
@@ -195,7 +201,7 @@ def getActivationOutputVector(layer):
 
 
 def sigmoid(z):
-    s = 1 / (1 + math.exp(-z))
+    s = 1.0 / (1.0 + math.exp(-z))
     # if s == 1:
     #     s = 0.999
     return s
@@ -219,13 +225,16 @@ def initWeight(network):
 
 def getNewDeltaVal(preDelta, oldWeight, derivativeVal):
     count = 0.0
-    for (d,w) in zip(preDelta,oldWeight):
+    for (d, w) in zip(preDelta, oldWeight):
         count = count + d * w
     return count * derivativeVal
 
 
-def getDerivativeVal(aVal):
-    return aVal * (1 - aVal)
+def getDerivativeVal(aVal):  # if get value too small set 0.001
+    deri = aVal * (1 - aVal)
+    # if deri < 0.001:
+    #     deri = 0.001
+    return deri
 
 
 def getWeightVectorFromLastLayer(network, neuronIndex, layerIndex):
@@ -277,6 +286,9 @@ class Neuron(object):
 
     def setWeight(self, weight):
         self.weight = weight
+
+    def setDelta(self, delta):
+        self.delta = delta
 
     def setActivationFunctionOutput(self, a):
         self.aVal = a;
