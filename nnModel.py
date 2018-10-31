@@ -64,7 +64,7 @@ def loadData(resolution):
             testSet.append(list(map(float, regExpList[0].split(" "))))
             testLabel.append(list(map(float, regExpList[1].split(" "))))
     print("Load Testing Set.")
-    # normaliseData(int(resolution))
+    normaliseData(int(resolution))
     initNN(trainSetFileName, testSetFileName)
 
 
@@ -88,7 +88,7 @@ def initNN(trainSetFileName, testSetFileName):
     trainData = list(zip(trainSet, trainLable))
     testData = list(zip(testSet, testLabel))
     nn = Network(nnPram)
-    nn.train(trainData, testData, 1000 )
+    nn.train(trainData, testData, 1000)
 
 
 def initHiddenLayer():
@@ -118,88 +118,77 @@ class Network(object):
     def train(self, training_data, test_data, epochs):
         for i in range(epochs):
             mini_batches = [training_data[k:k + 1] for k in range(0, len(training_data))]
-            for mini_batch in mini_batches:
-                # 根据每个小样本来更新 w 和 b，代码在下一段
-                self.updateWeight(mini_batch)
-            print("epoch ",i)
+            for (X, Y) in training_data:
+                self.updateWeight(X, Y)
+            print("epoch ", i)
             print(" training Accurate", self.evaluate(training_data))
-            print(" testing Accurate",self.evaluate(test_data))
+            print(" testing Accurate", self.evaluate(test_data))
 
-
-    def sigmoid(self,z):
+    def sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
-    def updateWeight(self, data):
+    def updateWeight(self, x, y):
         # 根据 biases 和 weights 的行列数创建对应的全部元素值为 0 的空矩阵
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
-        for (x, y) in data:
-            x = self.matrixTranspose(x)
-            y = self.matrixTranspose(y)
-            # 根据样本中的每一个输入 x 的其输出 y，计算 w 和 b 的偏导数
-            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-            # 累加储存偏导值 delta_nabla_b 和 delta_nabla_w
-            nabla_b = [nb + dnb for (nb, dnb) in zip(nabla_b, delta_nabla_b)]
-            nabla_w = [nw + dnw for (nw, dnw) in zip(nabla_w, delta_nabla_w)]
+        x = self.matrixTranspose(x)
+        y = self.matrixTranspose(y)
+        # 根据样本中的每一个输入 x 的其输出 y，计算 w 和 b 的偏导数
+        delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+        # 累加储存偏导值 delta_nabla_b 和 delta_nabla_w
+        nabla_b = [nb + dnb for (nb, dnb) in zip(nabla_b, delta_nabla_b)]
+        nabla_w = [nw + dnw for (nw, dnw) in zip(nabla_w, delta_nabla_w)]
         # 更新根据累加的偏导值更新 w 和 b，这里因为用了小样本，
-        # 所以 eta 要除于小样本的长度
-        self.weights = [w - (1 / len(data)) * nw
+        self.weights = [w - nw
                         for (w, nw) in zip(self.weights, nabla_w)]
-        self.biases = [b - (1 / len(data)) * nb
+        self.biases = [b - nb
                        for (b, nb) in zip(self.biases, nabla_b)]
 
     def evaluate(self, test_data):
         test_results = [(self.feedforward(self.matrixTranspose(x)), self.matrixTranspose(y))
                         for (x, y) in test_data]
         count = 0
-        for (x,y) in test_results:
+        for (x, y) in test_results:
             maxVal = x.max()
             maxIndex = (np.where(x == maxVal))[0]
             if y[maxIndex] == 1.0:
                 count += 1
-        return count/len(test_results)
+        return count / len(test_results)
 
-    def matrixTranspose(self,x):
+    def matrixTranspose(self, x):
         x = np.array(x)
-        x = x.reshape(-1,1)
+        x = x.reshape(-1, 1)
         return x
 
     def backprop(self, x, y):
-        nabla_b = [np.zeros(b.shape) for b in self.biases]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
-        # 前向传输
-        x = self.matrixTranspose(x)
-        y = self.matrixTranspose(y)
+        biasMatrix = [np.zeros(b.shape) for b in self.biases]
+        weightMatrix = [np.zeros(w.shape) for w in self.weights]
         activation = x
-        # 储存每层的神经元的值的矩阵，下面循环会 append 每层的神经元的值
         activations = [x]
-        # 储存每个未经过 sigmoid 计算的神经元的值
         zs = []
         for (b, w) in zip(self.biases, self.weights):
             z = np.dot(w, activation) + b
             zs.append(z)
             activation = self.sigmoid(z)
             activations.append(activation)
-        # 求 δ 的值
-        delta = self.cost_derivative(activations[-1], y) * self.sigmoid_prime(zs[-1])
-        nabla_b[-1] = delta
-        # 乘于前一层的输出值
-        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+        delta = self.getDerivativeVal(activations[-1], y) * self.sigmoid_prime(zs[-1])
+        biasMatrix[-1] = delta
+        weightMatrix[-1] = np.dot(delta, activations[-2].transpose())
         for i in range(2, self.num_layers):
-            # 从倒数第 **l** 层开始更新，**-l** 是 python 中特有的语法表示从倒数第 l 层开始计算
-            # 下面这里利用 **l+1** 层的 δ 值来计算 **l** 的 δ 值
             z = zs[-i]
             sp = self.sigmoid_prime(z)
+            # t = self.weights[-i + 1].transpose()
             delta = np.dot(self.weights[-i + 1].transpose(), delta) * sp
-            nabla_b[-i] = delta
-            nabla_w[-i] = np.dot(delta, activations[-i - 1].transpose())
-        return (nabla_b, nabla_w)
+            biasMatrix[-i] = delta
+            weightMatrix[-i] = np.dot(delta, activations[-i - 1].transpose())
+        return biasMatrix, weightMatrix
 
-    def sigmoid_prime(self,z):
+    def sigmoid_prime(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
 
-    def cost_derivative(self, output_activations, y):
-        return (output_activations - y)
+    def getDerivativeVal(self, output_activations, y):
+        return output_activations - y
+
 
 if __name__ == "__main__":
     getInputs()
