@@ -93,7 +93,7 @@ def initNeurons(trainSetFileName, testSetFileName):
     # trainSet = np.array(trainSet)
     # trainLable = np.array(trainLable)
     print("Training on " + trainSetFileName + "...")
-    backPropagationLearning(network, 9999)
+    backPropagationLearning(network, 99)
     print("Testing on " + testSetFileName + "...")
     validateNetwork(network)
 
@@ -149,9 +149,9 @@ def backPropagationLearning(network, epoches):
 
 
 def validateNetwork(network):
-    global testSet, testLabel
-    testSet =trainSet
-    testLabel =trainLable
+    # global testSet, testLabel
+    # testSet =trainSet
+    # testLabel =trainLable
     # testLabel = testLabel[1:2]
     # testSet = []
     # ss = []
@@ -209,8 +209,8 @@ def sigmoid(z):
 
 
 def initWeightHelper(dim):
-    w = np.random.randn(dim, 1)
-    b = np.random.randn()
+    w = np.random.rand(dim, 1)
+    b = np.random.rand()
     return w, b
 
 

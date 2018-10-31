@@ -87,10 +87,8 @@ def initNN(trainSetFileName, testSetFileName):
     nnPram.append(len(trainLable[0]))
     trainData = list(zip(trainSet, trainLable))
     testData = list(zip(testSet, testLabel))
-    print(testData[825])
-    # print(np.shape(testLabel))
     nn = Network(nnPram)
-    nn.train(trainData, testData, 1000)  # nnpram problems
+    nn.train(trainData, testData, 1000, 10)
 
 
 def initHiddenLayer():
@@ -108,27 +106,20 @@ class Network(object):
     def __init__(self, sizes):
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for (x, y) in zip(sizes[:-1], sizes[1:])]
+        self.biases = [np.random.randn(y, 1)*0.1 for y in sizes[1:]]
+        self.weights = [np.random.randn(y, x)*0.1 for (x, y) in zip(sizes[:-1], sizes[1:])]
 
     def feedforward(self, a):
         for (b, w) in zip(self.biases, self.weights):
             a = self.sigmoid(np.dot(w, a) + b)
         return a
 
-    def train(self, training_data, test_data, epochs):
+    def train(self, training_data, test_data, epochs ,batch):
         for i in range(epochs):
             # random.shuffle(training_data)
-            # mini_batches = [training_data[k:k + 1] for k in range(0, len(training_data))]
-            count = 0
-            for (x, y) in training_data:
-                self.updateWeight(x, y)
-                # if np.isnan(self.weights[0][0][0]):
-                #     print(count)
-                #     return
-                # if count == 825:
-                #     print("opps")
-                count += 1
+            mini_batches = [training_data[k:k + batch] for k in range(0, len(training_data))]
+            for mini_batch in mini_batches:
+                self.updateWeight(mini_batch)
             print("epoch :", i)
             print("training Accurate :", self.evaluate(training_data))
             print("testing Accurate :", self.evaluate(test_data))
@@ -136,12 +127,19 @@ class Network(object):
     def sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
-    def updateWeight(self, x, y):
-        x = self.matrixTranspose(x)
-        y = self.matrixTranspose(y)
-        biasMatrix, weightMatrix = self.backprop(x, y)
-        self.weights = [w - nw for (w, nw) in zip(self.weights, weightMatrix)]
-        self.biases = [b - nb for (b, nb) in zip(self.biases, biasMatrix)]
+    def updateWeight(self,batchs):
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        for x, y in batchs:
+            x = self.matrixTranspose(x)
+            y = self.matrixTranspose(y)
+            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+            nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
+            nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+        self.weights = [w - (1 / len(batchs)) * nw
+                        for w, nw in zip(self.weights, nabla_w)]
+        self.biases = [b - (1 / len(batchs)) * nb
+                       for b, nb in zip(self.biases, nabla_b)]
 
     def evaluate(self, test_data):
         test_results = [(self.feedforward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
