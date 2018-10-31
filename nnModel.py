@@ -87,8 +87,10 @@ def initNN(trainSetFileName, testSetFileName):
     nnPram.append(len(trainLable[0]))
     trainData = list(zip(trainSet, trainLable))
     testData = list(zip(testSet, testLabel))
+    print(testData[825])
+    # print(np.shape(testLabel))
     nn = Network(nnPram)
-    nn.train(trainData, testData, 1000)
+    nn.train(trainData, testData, 1000)  # nnpram problems
 
 
 def initHiddenLayer():
@@ -116,9 +118,17 @@ class Network(object):
 
     def train(self, training_data, test_data, epochs):
         for i in range(epochs):
+            # random.shuffle(training_data)
             # mini_batches = [training_data[k:k + 1] for k in range(0, len(training_data))]
+            count = 0
             for (x, y) in training_data:
                 self.updateWeight(x, y)
+                # if np.isnan(self.weights[0][0][0]):
+                #     print(count)
+                #     return
+                # if count == 825:
+                #     print("opps")
+                count += 1
             print("epoch :", i)
             print("training Accurate :", self.evaluate(training_data))
             print("testing Accurate :", self.evaluate(test_data))
@@ -139,11 +149,15 @@ class Network(object):
         for (x, y) in test_results:
             maxVal = x.max()
             maxIndex = (np.where(x == maxVal))[0]
+            # print(y[maxIndex], maxVal)
             if y[maxIndex] == 1.0:
                 count += 1
         return count / len(test_results)
 
     def matrixTranspose(self, x):
+        for i in range(len(x)):
+            if np.isnan(x[i]):
+                x[i] = 0
         x = np.array(x)
         x = x.reshape(-1, 1)
         return x

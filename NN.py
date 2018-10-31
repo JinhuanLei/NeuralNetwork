@@ -87,6 +87,7 @@ def initNeurons(trainSetFileName, testSetFileName):
     network.append(inputLayer)
     network = network + hiddenLayers
     network.append(outputLayer)
+    len(testSet)
     initWeight(network)
     #####################
     # trainSet = np.array(trainSet)
