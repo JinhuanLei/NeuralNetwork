@@ -62,7 +62,7 @@ def loadData(resolution):
             testSet.append(list(map(float, regExpList[0].split(" "))))
             testLabel.append(list(map(float, regExpList[1].split(" "))))
     print("Load Testing Set.")
-    # normaliseData(int(resolution))
+    normaliseData(int(resolution))
     initNeurons(trainSetFileName, testSetFileName)
 
 
@@ -148,7 +148,9 @@ def backPropagationLearning(network, epoches):
 
 
 def validateNetwork(network):
-    # global testSet, testLabel
+    global testSet, testLabel
+    testSet =trainSet
+    testLabel =trainLable
     # testLabel = testLabel[1:2]
     # testSet = []
     # ss = []
@@ -196,6 +198,9 @@ def getActivationOutputVector(layer):
 
 
 def sigmoid(z):
+    # print(z)
+    if z < -50:
+        z = -50
     s = 1.0 / (1.0 + math.exp(-z))
     # if s == 1:
     #     s = 0.999
@@ -203,8 +208,8 @@ def sigmoid(z):
 
 
 def initWeightHelper(dim):
-    w = np.random.rand(dim, 1)
-    b = np.random.rand()
+    w = np.random.randn(dim, 1)
+    b = np.random.randn()
     return w, b
 
 

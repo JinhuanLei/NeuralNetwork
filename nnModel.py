@@ -107,8 +107,7 @@ class Network(object):
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)
-                        for x, y in zip(sizes[:-1], sizes[1:])]
+        self.weights = [np.random.randn(y, x) for (x, y) in zip(sizes[:-1], sizes[1:])]
 
     def feedforward(self, a):
         for (b, w) in zip(self.biases, self.weights):
@@ -117,36 +116,25 @@ class Network(object):
 
     def train(self, training_data, test_data, epochs):
         for i in range(epochs):
-            mini_batches = [training_data[k:k + 1] for k in range(0, len(training_data))]
-            for (X, Y) in training_data:
-                self.updateWeight(X, Y)
-            print("epoch ", i)
-            print(" training Accurate", self.evaluate(training_data))
-            print(" testing Accurate", self.evaluate(test_data))
+            # mini_batches = [training_data[k:k + 1] for k in range(0, len(training_data))]
+            for (x, y) in training_data:
+                self.updateWeight(x, y)
+            print("epoch :", i)
+            print("training Accurate :", self.evaluate(training_data))
+            print("testing Accurate :", self.evaluate(test_data))
 
     def sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
     def updateWeight(self, x, y):
-        # 根据 biases 和 weights 的行列数创建对应的全部元素值为 0 的空矩阵
-        nabla_b = [np.zeros(b.shape) for b in self.biases]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
         x = self.matrixTranspose(x)
         y = self.matrixTranspose(y)
-        # 根据样本中的每一个输入 x 的其输出 y，计算 w 和 b 的偏导数
-        delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-        # 累加储存偏导值 delta_nabla_b 和 delta_nabla_w
-        nabla_b = [nb + dnb for (nb, dnb) in zip(nabla_b, delta_nabla_b)]
-        nabla_w = [nw + dnw for (nw, dnw) in zip(nabla_w, delta_nabla_w)]
-        # 更新根据累加的偏导值更新 w 和 b，这里因为用了小样本，
-        self.weights = [w - nw
-                        for (w, nw) in zip(self.weights, nabla_w)]
-        self.biases = [b - nb
-                       for (b, nb) in zip(self.biases, nabla_b)]
+        biasMatrix, weightMatrix = self.backprop(x, y)
+        self.weights = [w - nw for (w, nw) in zip(self.weights, weightMatrix)]
+        self.biases = [b - nb for (b, nb) in zip(self.biases, biasMatrix)]
 
     def evaluate(self, test_data):
-        test_results = [(self.feedforward(self.matrixTranspose(x)), self.matrixTranspose(y))
-                        for (x, y) in test_data]
+        test_results = [(self.feedforward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
         count = 0
         for (x, y) in test_results:
             maxVal = x.max()
@@ -165,28 +153,28 @@ class Network(object):
         weightMatrix = [np.zeros(w.shape) for w in self.weights]
         activation = x
         activations = [x]
-        zs = []
+        outputMatrix = []
         for (b, w) in zip(self.biases, self.weights):
             z = np.dot(w, activation) + b
-            zs.append(z)
+            outputMatrix.append(z)
             activation = self.sigmoid(z)
             activations.append(activation)
-        delta = self.getDerivativeVal(activations[-1], y) * self.sigmoid_prime(zs[-1])
+        delta = self.getError(activations[-1], y) * self.getDerivativeVal(outputMatrix[-1])
         biasMatrix[-1] = delta
         weightMatrix[-1] = np.dot(delta, activations[-2].transpose())
         for i in range(2, self.num_layers):
-            z = zs[-i]
-            sp = self.sigmoid_prime(z)
+            z = outputMatrix[-i]
+            sp = self.getDerivativeVal(z)
             # t = self.weights[-i + 1].transpose()
             delta = np.dot(self.weights[-i + 1].transpose(), delta) * sp
             biasMatrix[-i] = delta
             weightMatrix[-i] = np.dot(delta, activations[-i - 1].transpose())
         return biasMatrix, weightMatrix
 
-    def sigmoid_prime(self, z):
+    def getDerivativeVal(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
 
-    def getDerivativeVal(self, output_activations, y):
+    def getError(self, output_activations, y):
         return output_activations - y
 
 
