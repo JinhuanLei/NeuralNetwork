@@ -2,7 +2,6 @@ import os
 import re
 import numpy as np
 import math
-
 CURRENT_PATH = os.path.dirname(__file__)
 trainSet = []
 trainLable = []
@@ -79,6 +78,7 @@ def normaliseData(resolution):
 
 
 def initNeurons(trainSetFileName, testSetFileName):
+    global trainSet,trainLable
     print("Initializing network...")
     hiddenLayers = initHiddenLayer()
     inputLayer = initInputLayer(len(trainSet[0]))
@@ -87,10 +87,15 @@ def initNeurons(trainSetFileName, testSetFileName):
     network.append(inputLayer)
     network = network + hiddenLayers
     network.append(outputLayer)
-    network = initWeight(network)
+    initWeight(network)
+    #####################
+    # trainSet = np.array(trainSet)
+    # trainLable = np.array(trainLable)
     print("Training on " + trainSetFileName + "...")
-    backPropagationLearning(network, 5)
-    validateNetwork(network, testSetFileName)
+    backPropagationLearning(network, 9999)
+    print("Testing on " + testSetFileName + "...")
+    validateNetwork(network)
+
 
 
 def backPropagationLearning(network, epoches):
@@ -137,22 +142,23 @@ def backPropagationLearning(network, epoches):
         if maxError < 0.01:
             print("Oppppps")
             return network
+        print("Epoch ", epoch, ":")
+        validateNetwork(network)
     return network
 
 
-def validateNetwork(network, testSetFileName):
-    global testSet, testLabel
-    testLabel = testLabel[1:2]
-    testSet = []
-    ss =[]
-    for i in range(65):
-        ss.append(999)
-    testSet.append(ss)
+def validateNetwork(network):
+    # global testSet, testLabel
+    # testLabel = testLabel[1:2]
+    # testSet = []
+    # ss = []
+    # for i in range(65):
+    #     ss.append(999)
+    # testSet.append(ss)
     # testSet = trainSet[0:1]
     # testLabel = trainLable[0:1]
-    print("Testing on " + testSetFileName + "...")
     correct = 0
-    print(len(testSet), len(testLabel))
+    # print(len(testSet), len(testLabel))
     for (image, lable) in zip(testSet, testLabel):
         for i in range(len(network[0])):
             network[0][i].setActivationFunctionOutput(image[i])
@@ -209,7 +215,7 @@ def initWeight(network):
             w, b = initWeightHelper(preLayerSize)
             neuron.setWeight(w)
             neuron.setBias(b)
-    return network
+
 
 
 def getNewDeltaVal(preDelta, oldWeight, derivativeVal):
@@ -286,5 +292,4 @@ class Neuron(object):
 
 
 if __name__ == "__main__":
-
     getInputs()
