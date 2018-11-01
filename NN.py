@@ -93,7 +93,7 @@ def initNeurons(trainSetFileName, testSetFileName):
     # trainSet = np.array(trainSet)
     # trainLable = np.array(trainLable)
     print("Training on " + trainSetFileName + "...")
-    backPropagationLearning(network, 99)
+    backPropagationLearning(network, 50)
     print("Testing on " + testSetFileName + "...")
     validateNetwork(network)
 
@@ -120,7 +120,7 @@ def backPropagationLearning(network, epoches):
             for i in range(len(network[layerDepth])):
                 neu = network[layerDepth][i]
                 error = label[i] - neu.aVal
-                predict = 0
+                # predict = 0
                 # if neu.aVal>0.5:
                 #     predict = 1
                 # else:
@@ -137,8 +137,12 @@ def backPropagationLearning(network, epoches):
                     neu = network[i][j]
                     deriVal = getDerivativeVal(neu.aVal)
                     weight = getWeightVectorFromLastLayer(network[i + 1], j)
+                    # weight = np.array(weight)
+                    # weight = weight.reshape(-1,1)
                     deltas = getDeltaVector(network[i + 1])
+                    # deltas = np.array(deltas)
                     neu.delta = getNewDeltaVal(deltas, weight, deriVal)
+                    # neu.delta = np.dot(weight,deltas)*deriVal
             for i in range(1, len(network)):
                 a = getActivationOutputVector(network[i - 1])
                 for j in range(len(network[i])):
@@ -158,14 +162,6 @@ def validateNetwork(network):
     # global testSet, testLabel
     # testSet =trainSet
     # testLabel =trainLable
-    # testLabel = testLabel[1:2]
-    # testSet = []
-    # ss = []
-    # for i in range(65):
-    #     ss.append(999)
-    # testSet.append(ss)
-    # testSet = trainSet[0:1]
-    # testLabel = trainLable[0:1]
     correct = 0
     # print(len(testSet), len(testLabel))
     for (image, lable) in zip(testSet, testLabel):
@@ -206,8 +202,8 @@ def getActivationOutputVector(layer):
 
 def sigmoid(z):
     # print(z)
-    if z < -50:
-        z = -50
+    # if z < -50:
+    #     z = -50
     s = 1.0 / (1.0 + math.exp(-z))
     # if s == 1:
     #     s = 0.999
@@ -245,10 +241,10 @@ def getDerivativeVal(aVal):  # if get value too small set 0.001
 
 
 def getWeightVectorFromLastLayer(layer, neuronIndex):
-    vector = []
+    vec = []
     for neu in layer:
-        vector.append(neu.weight[neuronIndex])
-    return vector
+        vec.append(neu.weight[neuronIndex])
+    return vec
 
 
 def initHiddenLayer():
@@ -304,4 +300,6 @@ class Neuron(object):
 
 
 if __name__ == "__main__":
+    # arr = np.array([1,2,3])
+    # print()
     getInputs()

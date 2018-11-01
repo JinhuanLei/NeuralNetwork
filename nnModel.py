@@ -132,7 +132,7 @@ def initNN(trainSetFileName, testSetFileName, resolution):
     testData = list(zip(testSet, testLabel))
     nn = Network(nnPram, resolution)
     print("Training on " + trainSetFileName + "...")
-    nn.train(trainData, testData, 3, 10)
+    nn.train(trainData, testData, 50, 5)
     saveNetwork(nn)
 
 
@@ -174,14 +174,24 @@ class Network(object):
             a = self.sigmoid(np.dot(w, a) + b)
         return a
 
-    def train(self, training_data, test_data, epochs, batch):
+    def splitBatches(self, training_data, batchLength):
+        batches = []
+        iters = int(len(training_data) / batchLength)
+        for i in range(iters):
+            batches.append(training_data[i * batchLength:i * batchLength + 10])
+        if len(training_data) % batchLength != 0:
+            batches.append(training_data[iters * 10:])
+        return batches
+
+    def train(self, training_data, test_data, epochs, batchLength):
         # if test_data:
         #     test_data = list(test_data)
         for epoch in range(epochs):
             random.shuffle(training_data)
-            mini_batches = [training_data[k:k + batch] for k in range(0, len(training_data))]
-            for mini_batch in mini_batches:
-                self.updateWeight(mini_batch)
+            # batches = [training_data[k:k + batchLength] for k in range(0, len(training_data))]
+            batches = self.splitBatches(training_data,batchLength)
+            for batch in batches:
+                self.updateWeight(batch)
             # print("epoch :", i)
             # print("training Accurate :", self.evaluate(training_data))
             # print("testing Accurate :", self.evaluate(test_data))
