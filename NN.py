@@ -120,6 +120,12 @@ def backPropagationLearning(network, epoches):
             for i in range(len(network[layerDepth])):
                 neu = network[layerDepth][i]
                 error = label[i] - neu.aVal
+                predict = 0
+                # if neu.aVal>0.5:
+                #     predict = 1
+                # else:
+                #     predict = 0
+                # error = math.log(neu.aVal) * predict + (1-predict)* math.log(1-neu.aVal)
                 if abs(error) > maxError:
                     maxError = abs(error)
                 deriVal = getDerivativeVal(neu.aVal)
