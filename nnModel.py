@@ -132,7 +132,7 @@ def initNN(trainSetFileName, testSetFileName, resolution):
     testData = list(zip(testSet, testLabel))
     nn = Network(nnPram, resolution)
     print("Training on " + trainSetFileName + "...")
-    nn.train(trainData, testData, 50, 5)
+    nn.train(trainData, testData, 500, 5)
     saveNetwork(nn)
 
 
@@ -184,18 +184,16 @@ class Network(object):
         return batches
 
     def train(self, training_data, test_data, epochs, batchLength):
-        # if test_data:
-        #     test_data = list(test_data)
         for epoch in range(epochs):
-            random.shuffle(training_data)
-            # batches = [training_data[k:k + batchLength] for k in range(0, len(training_data))]
-            batches = self.splitBatches(training_data,batchLength)
+            # random.shuffle(training_data)
+            batches = [training_data[k:k + batchLength] for k in range(0, len(training_data))]
+            # batches = self.splitBatches(training_data , batchLength)
             for batch in batches:
                 self.updateWeight(batch)
-            # print("epoch :", i)
-            # print("training Accurate :", self.evaluate(training_data))
-            # print("testing Accurate :", self.evaluate(test_data))
-            print("Epoch ", epoch, ":", self.evaluate(test_data))
+            print("-----------------")
+            print("Epoch ", epoch, " in train_data:", self.evaluate(training_data))
+            print("Epoch ", epoch, "in test_data:", self.evaluate(test_data))
+            print("-----------------")
 
     def sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
@@ -207,7 +205,7 @@ class Network(object):
             x = self.matrixTranspose(x)
             y = self.matrixTranspose(y)
             delta_bias, delta_weight = self.backPropLearning(x, y)
-            batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
+            batch_bias = [bias + delta for bias, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
         self.weights = [w + (1 / len(batchs)) * nw
                         for w, nw in zip(self.weights, batch_weight)]
@@ -246,7 +244,6 @@ class Network(object):
             activations.append(activation)
         delta = self.getError(activations[-1], y) * self.getDerivativeVal(outputMatrix[-1])
         delta_bias[-1] = delta
-        # delta_bias[-1] = self.getError(activations[-1], y) *
         delta_weight[-1] = np.dot(delta, activations[-2].transpose())
         for i in range(2, self.num_layers):
             z = outputMatrix[-i]
