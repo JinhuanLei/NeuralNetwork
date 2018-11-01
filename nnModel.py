@@ -106,17 +106,29 @@ class Network(object):
     def __init__(self, sizes):
         self.num_layers = len(sizes)
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1)*0.1 for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)*0.1 for (x, y) in zip(sizes[:-1], sizes[1:])]
+        self.biases = self.initBias()
+        self.weights = self.initWeights()
 
-    def feedforward(self, a):
+    def initWeights(self):
+        list = []
+        for i in range(1,len(self.sizes)):
+            list.append(np.random.randn(self.sizes[i] , self.sizes[i-1]))
+        return list
+
+    def initBias(self):
+        list = []
+        for i in range(1,len(self.sizes)):
+            list.append(np.random.randn(self.sizes[i] , 1))
+        return list
+
+    def feedForward(self, a):
         for (b, w) in zip(self.biases, self.weights):
             a = self.sigmoid(np.dot(w, a) + b)
         return a
 
     def train(self, training_data, test_data, epochs ,batch):
         for i in range(epochs):
-            # random.shuffle(training_data)
+            random.shuffle(training_data)
             mini_batches = [training_data[k:k + batch] for k in range(0, len(training_data))]
             for mini_batch in mini_batches:
                 self.updateWeight(mini_batch)
@@ -128,21 +140,21 @@ class Network(object):
         return 1.0 / (1.0 + np.exp(-z))
 
     def updateWeight(self,batchs):
-        nabla_b = [np.zeros(b.shape) for b in self.biases]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        batch_bias = [np.zeros(b.shape) for b in self.biases]
+        batch_weight = [np.zeros(w.shape) for w in self.weights]
         for x, y in batchs:
             x = self.matrixTranspose(x)
             y = self.matrixTranspose(y)
-            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-            nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
-            nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+            delta_bias, delta_weight = self.backprop(x, y)
+            batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
+            batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
         self.weights = [w - (1 / len(batchs)) * nw
-                        for w, nw in zip(self.weights, nabla_w)]
+                        for w, nw in zip(self.weights, batch_weight)]
         self.biases = [b - (1 / len(batchs)) * nb
-                       for b, nb in zip(self.biases, nabla_b)]
+                       for b, nb in zip(self.biases, batch_bias)]
 
     def evaluate(self, test_data):
-        test_results = [(self.feedforward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
+        test_results = [(self.feedForward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
         count = 0
         for (x, y) in test_results:
             maxVal = x.max()
