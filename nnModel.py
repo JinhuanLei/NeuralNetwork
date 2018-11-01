@@ -4,6 +4,7 @@ import numpy as np
 import random
 import math
 import pickle
+import sys
 
 CURRENT_PATH = os.path.dirname(__file__)
 trainSet = []
@@ -13,8 +14,8 @@ testLabel = []
 
 
 def getInputs():
-    # options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
-    options = "t"  # test Purpose
+    options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
+    # options = "t"  # test Purpose
     if options == "L" or options == "l":
         name = str(input("Network file-name: "))
         nnFileName = name + ".txt"
@@ -36,8 +37,8 @@ def getInputs():
     elif options == "T" or options == "t":
         # print("train")
         while (True):
-            # resolution = str(input("Resolution of data (5/10/15/20): "))
-            resolution = "5"  # test Purpose
+            resolution = str(input("Resolution of data (5/10/15/20): "))
+            # resolution = "5"  # test Purpose
             if resolution != "5" and resolution != "10" and resolution != "15" and resolution != "20":
                 continue
             else:
@@ -51,7 +52,7 @@ def getInputs():
                 initNN(trainSetFileName, testSetFileName, int(resolution))
     else:
         print("Goodbye.")
-        os._exit()
+        sys.exit()
 
 
 def getNames(resolution):
@@ -131,13 +132,13 @@ def initNN(trainSetFileName, testSetFileName, resolution):
     testData = list(zip(testSet, testLabel))
     nn = Network(nnPram, resolution)
     print("Training on " + trainSetFileName + "...")
-    nn.train(trainData, testData, 50, 10)
+    nn.train(trainData, testData, 3, 10)
     saveNetwork(nn)
 
 
 def saveNetwork(nn):
     ifSave = str(input("Save network (Y/N)?"))
-    if ifSave == "Y" or "y":
+    if ifSave == "Y" or ifSave == "y":
         name = str(input("File-name: "))
         nnFileName = name + ".txt"
         nnFilePath = CURRENT_PATH + "/" + nnFileName
@@ -195,7 +196,7 @@ class Network(object):
         for x, y in batchs:
             x = self.matrixTranspose(x)
             y = self.matrixTranspose(y)
-            delta_bias, delta_weight = self.backprop(x, y)
+            delta_bias, delta_weight = self.backPropLearning(x, y)
             batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
         self.weights = [w + (1 / len(batchs)) * nw
@@ -222,7 +223,7 @@ class Network(object):
         x = x.reshape(-1, 1)
         return x
 
-    def backprop(self, x, y):
+    def backPropLearning(self, x, y):
         delta_bias = [np.zeros(b.shape) for b in self.biases]
         delta_weight = [np.zeros(w.shape) for w in self.weights]
         activation = x
