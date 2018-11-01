@@ -13,8 +13,8 @@ testLabel = []
 
 
 def getInputs():
-    options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
-    # options = "t"  # test Purpose
+    # options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
+    options = "t"  # test Purpose
     if options == "L" or options == "l":
         name = str(input("Network file-name: "))
         nnFileName = name + ".txt"
@@ -22,22 +22,22 @@ def getInputs():
         print("Loading network...")
         with open(nnFilePath, "rb") as f:
             nn = pickle.load(f)
-            print("Input layer size: ",nn.sizes[0],"nodes")
-            print("Hidden layer size:", nn.sizes[1:-1],)
-            print("Output layer size",nn.sizes[-1])
+            print("Input layer size: ", nn.sizes[0], "nodes")
+            print("Hidden layer size:", nn.sizes[1:-1], )
+            print("Output layer size", nn.sizes[-1])
             resolution = nn.resolution
             loadData(str(resolution))
             trainData = list(zip(trainSet, trainLable))
             testData = list(zip(testSet, testLabel))
             trainSetFileName, testSetFileName = getNames(resolution)
-            print("Testing on "+testSetFileName+"...")
-            print("Accuracy achieved:",nn.evaluate(trainData))
+            print("Testing on " + testSetFileName + "...")
+            print("Accuracy achieved:", nn.evaluate(trainData))
         getInputs()
     elif options == "T" or options == "t":
         # print("train")
         while (True):
-            resolution = str(input("Resolution of data (5/10/15/20): "))
-            # resolution = "5"  # test Purpose
+            # resolution = str(input("Resolution of data (5/10/15/20): "))
+            resolution = "5"  # test Purpose
             if resolution != "5" and resolution != "10" and resolution != "15" and resolution != "20":
                 continue
             else:
@@ -55,12 +55,12 @@ def getInputs():
 
 
 def getNames(resolution):
-    resolution =str(resolution)
+    resolution = str(resolution)
     if resolution == "5":
         resolution = "0" + resolution
     trainSetFileName = "trainSet_" + resolution + ".dat"
     testSetFileName = "testSet_" + resolution + ".dat"
-    return trainSetFileName,testSetFileName
+    return trainSetFileName, testSetFileName
 
 
 def loadData(resolution):
@@ -99,7 +99,6 @@ def loadData(resolution):
     print("Load Testing Set.")
 
 
-
 def normaliseData(resolution):
     global trainSet, testSet
     count = resolution * resolution
@@ -122,7 +121,7 @@ def initHiddenLayer():
     return hiddenLayers
 
 
-def initNN(trainSetFileName, testSetFileName,resolution):
+def initNN(trainSetFileName, testSetFileName, resolution):
     nnPram = []
     hiddenLayers = initHiddenLayer()
     nnPram.append(len(trainSet[0]))
@@ -130,33 +129,27 @@ def initNN(trainSetFileName, testSetFileName,resolution):
     nnPram.append(len(trainLable[0]))
     trainData = list(zip(trainSet, trainLable))
     testData = list(zip(testSet, testLabel))
-    nn = Network(nnPram,resolution)
+    nn = Network(nnPram, resolution)
     print("Training on " + trainSetFileName + "...")
-    nn.train(trainData, trainData, 20, 10)
+    nn.train(trainData, trainData, 50, 10)
     saveNetwork(nn)
-
-
-
 
 
 def saveNetwork(nn):
     ifSave = str(input("Save network (Y/N)?"))
     if ifSave == "Y" or "y":
         name = str(input("File-name: "))
-        nnFileName = name+".txt"
-        nnFilePath = CURRENT_PATH + "/"+nnFileName
+        nnFileName = name + ".txt"
+        nnFilePath = CURRENT_PATH + "/" + nnFileName
         print("Saving network...")
         with open(nnFilePath, "wb") as f:
             pickle.dump(nn, f)
-        print("Network saved to file: "+name)
+        print("Network saved to file: " + name)
     getInputs()
 
 
-
-
-
 class Network(object):
-    def __init__(self, sizes,resolution):
+    def __init__(self, sizes, resolution):
         self.num_layers = len(sizes)
         self.sizes = sizes
         self.biases = self.initBias()
@@ -205,9 +198,9 @@ class Network(object):
             delta_bias, delta_weight = self.backprop(x, y)
             batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
-        self.weights = [w - (3.0 / len(batchs)) * nw
+        self.weights = [w + (1 / len(batchs)) * nw
                         for w, nw in zip(self.weights, batch_weight)]
-        self.biases = [b - (3.0 / len(batchs)) * nb
+        self.biases = [b + (1 / len(batchs)) * nb
                        for b, nb in zip(self.biases, batch_bias)]
 
     def evaluate(self, test_data):
@@ -230,8 +223,8 @@ class Network(object):
         return x
 
     def backprop(self, x, y):
-        biasMatrix = [np.zeros(b.shape) for b in self.biases]
-        weightMatrix = [np.zeros(w.shape) for w in self.weights]
+        delta_bias = [np.zeros(b.shape) for b in self.biases]
+        delta_weight = [np.zeros(w.shape) for w in self.weights]
         activation = x
         activations = [x]
         outputMatrix = []
@@ -241,22 +234,35 @@ class Network(object):
             activation = self.sigmoid(z)
             activations.append(activation)
         delta = self.getError(activations[-1], y) * self.getDerivativeVal(outputMatrix[-1])
-        biasMatrix[-1] = delta
-        weightMatrix[-1] = np.dot(delta, activations[-2].transpose())
+        delta_bias[-1] = delta
+        # delta_bias[-1] = self.getError(activations[-1], y) *
+        delta_weight[-1] = np.dot(delta, activations[-2].transpose())
         for i in range(2, self.num_layers):
             z = outputMatrix[-i]
             sp = self.getDerivativeVal(z)
-            # t = self.weights[-i + 1].transpose()
             delta = np.dot(self.weights[-i + 1].transpose(), delta) * sp
-            biasMatrix[-i] = delta
-            weightMatrix[-i] = np.dot(delta, activations[-i - 1].transpose())
-        return biasMatrix, weightMatrix
+            delta_bias[-i] = delta
+            delta_weight[-i] = np.dot(delta, activations[-i - 1].transpose())
+        return delta_bias, delta_weight
+    #delta_bias, delta_weight
 
     def getDerivativeVal(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
 
     def getError(self, output_activations, y):
-        return output_activations - y
+        # print(output_activations[5])
+        origin = output_activations - y
+        error = np.array([np.zeros(y.shape)])
+        error = error.reshape(-1,1)
+        # print(len(y)-1)
+        for i in range(len(y)-1):
+            if y[i] == 1.0:
+                error[i] =  - math.log(output_activations[i])
+            else:
+                error[i] =  math.log(1-output_activations[i])
+        return error
+        ###################
+        # return output_activations - y
 
 
 if __name__ == "__main__":
