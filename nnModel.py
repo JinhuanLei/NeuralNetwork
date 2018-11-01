@@ -131,7 +131,7 @@ def initNN(trainSetFileName, testSetFileName, resolution):
     testData = list(zip(testSet, testLabel))
     nn = Network(nnPram, resolution)
     print("Training on " + trainSetFileName + "...")
-    nn.train(trainData, trainData, 50, 10)
+    nn.train(trainData, testData, 50, 10)
     saveNetwork(nn)
 
 
@@ -239,12 +239,13 @@ class Network(object):
         delta_weight[-1] = np.dot(delta, activations[-2].transpose())
         for i in range(2, self.num_layers):
             z = outputMatrix[-i]
-            sp = self.getDerivativeVal(z)
+            # sp = self.getDerivativeVal(z)
+            sp = self.getDerivativeVal(self.sigmoid(z))
             delta = np.dot(self.weights[-i + 1].transpose(), delta) * sp
             delta_bias[-i] = delta
             delta_weight[-i] = np.dot(delta, activations[-i - 1].transpose())
         return delta_bias, delta_weight
-    #delta_bias, delta_weight
+
 
     def getDerivativeVal(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
