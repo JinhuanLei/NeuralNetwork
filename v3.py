@@ -205,10 +205,8 @@ class Network(object):
             delta_bias, delta_weight = self.backprop(x, y)
             batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
-        self.weights = [w - (1 / len(batchs)) * nw
-                        for w, nw in zip(self.weights, batch_weight)]
-        self.biases = [b - (1 / len(batchs)) * nb
-                       for b, nb in zip(self.biases, batch_bias)]
+        self.weights = [w - (1 / len(batchs)) * nw for w, nw in zip(self.weights, batch_weight)]
+        self.biases = [b - (1 / len(batchs)) * nb for b, nb in zip(self.biases, batch_bias)]
 
     def evaluate(self, test_data):
         test_results = [(self.feedForward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
@@ -240,16 +238,16 @@ class Network(object):
             outputMatrix.append(z)
             activation = self.sigmoid(z)
             activations.append(activation)
-        delta = self.getError(activations[-1], y) * self.getDerivativeVal(outputMatrix[-1])
-        biasMatrix[-1] = delta
-        weightMatrix[-1] = np.dot(delta, activations[-2].transpose())
-        for i in range(2, self.num_layers):
-            z = outputMatrix[-i]
+        delta = self.getError(activations[len(activations)-1], y) * self.getDerivativeVal(outputMatrix[-1])
+        biasMatrix[len(biasMatrix)-1] = delta
+        weightMatrix[len(weightMatrix)-1] = np.dot(delta, activations[len(activations)-2].transpose())
+        for i in range(len(outputMatrix)-2,-1,-1):
+            z = outputMatrix[i]
             sp = self.getDerivativeVal(z)
             # t = self.weights[-i + 1].transpose()
-            delta = np.dot(self.weights[-i + 1].transpose(), delta) * sp
-            biasMatrix[-i] = delta
-            weightMatrix[-i] = np.dot(delta, activations[-i - 1].transpose())
+            delta = np.dot(self.weights[i + 1].transpose(), delta) * sp
+            biasMatrix[i] = delta
+            weightMatrix[i] = np.dot(delta, activations[i].transpose())
         return biasMatrix, weightMatrix
 
     def getDerivativeVal(self, z):
