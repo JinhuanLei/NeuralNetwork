@@ -160,13 +160,13 @@ class Network(object):
     def initWeights(self):
         list = []
         for i in range(1, len(self.sizes)):
-            list.append(np.random.randn(self.sizes[i], self.sizes[i - 1]))
+            list.append(np.random.rand(self.sizes[i], self.sizes[i - 1]))
         return list
 
     def initBias(self):
         list = []
         for i in range(1, len(self.sizes)):
-            list.append(np.random.randn(self.sizes[i], 1)*0.1)
+            list.append(np.random.rand(self.sizes[i], 1))
         return list
 
     def feedForward(self, a):
@@ -240,6 +240,7 @@ class Network(object):
             outputMatrix.append(z)
             activation = self.sigmoid(z)
             activations.append(activation)
+            # 最外层delta
         delta = self.getError(activations[-1], y) * self.getDerivativeVal(outputMatrix[-1])
         biasMatrix[-1] = delta
         weightMatrix[-1] = np.dot(delta, activations[-2].transpose())
@@ -247,7 +248,10 @@ class Network(object):
             z = outputMatrix[-i]
             sp = self.getDerivativeVal(z)
             # t = self.weights[-i + 1].transpose()
-            delta = np.dot(self.weights[-i + 1].transpose(), delta) * sp
+            # val = np.dot(self.biases[-i + 1],delta)
+            # bias = self.biases[-i + 1]
+            np.dot(self.weights[-i + 1].transpose(), self.biases[-i + 1])
+            delta = (np.dot(self.weights[-i + 1].transpose(), delta) + np.dot(self.weights[-i + 1].transpose(), self.biases[-i + 1])) * sp
             biasMatrix[-i] = delta
             weightMatrix[-i] = np.dot(delta, activations[-i - 1].transpose())
         return biasMatrix, weightMatrix

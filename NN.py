@@ -137,11 +137,12 @@ def backPropagationLearning(network, epoches):
                     neu = network[i][j]
                     deriVal = getDerivativeVal(neu.aVal)
                     weight = getWeightVectorFromLastLayer(network[i + 1], j)
+                    bias = getBiasFromLastLayer(network[i + 1])
                     # weight = np.array(weight)
                     # weight = weight.reshape(-1,1)
                     deltas = getDeltaVector(network[i + 1])
                     # deltas = np.array(deltas)
-                    neu.delta = getNewDeltaVal(deltas, weight, deriVal)
+                    neu.delta = (getNewDeltaVal(deltas, weight,bias)+ neu.bias)*deriVal
                     # neu.delta = np.dot(weight,deltas)*deriVal
             for i in range(1, len(network)):
                 a = getActivationOutputVector(network[i - 1])
@@ -156,6 +157,13 @@ def backPropagationLearning(network, epoches):
         print("Epoch ", epoch, ":")
         validateNetwork(network)
     return network
+
+
+def getBiasFromLastLayer(layer):
+    list = []
+    for neu in layer:
+        list.append(neu.bias)
+    return list
 
 
 def validateNetwork(network):
@@ -226,11 +234,11 @@ def initWeight(network):
 
 
 
-def getNewDeltaVal(preDelta, oldWeight, derivativeVal):
+def getNewDeltaVal(preDelta, oldWeight, bias):
     count = 0.0
-    for (d, w) in zip(preDelta, oldWeight):
-        count = count + d * w
-    return count * derivativeVal
+    for (d, w, b) in zip(preDelta, oldWeight,bias):
+        count = count + d * w+ b*w
+    return count
 
 
 def getDerivativeVal(aVal):  # if get value too small set 0.001
