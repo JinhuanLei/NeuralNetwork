@@ -132,7 +132,10 @@ def initNN(trainSetFileName, testSetFileName, resolution):
     testData = list(zip(testSet, testLabel))
     nn = Network(nnPram, resolution)
     print("Training on " + trainSetFileName + "...")
-    nn.train(trainData, testData, 500, 1)
+    nn.train(trainData, testData, 50, 1)
+    print("epoch :", 50)
+    print("training Accurate :", nn.evaluate(trainData))
+    print("testing Accurate :", nn.evaluate(testData))
     saveNetwork(nn)
 
 
@@ -180,11 +183,18 @@ class Network(object):
             batches = self.splitBatches(training_data, batchLength)
             for batch in batches:
                 self.updateWeight(batch)
-            print("epoch :", i)
-            print("training Accurate :", self.evaluate(training_data))
-            print("testing Accurate :", self.evaluate(test_data))
+            # print("epoch :", i)
+            # print("training Accurate :", self.evaluate(training_data))
+            # print("testing Accurate :", self.evaluate(test_data))
 
     def sigmoid(self, z):
+        # z = z.astype(np.float64)
+        # print(z)
+        for i in range(len(z)):
+            if z[i][0] > 700:
+                z[i][0] = 700
+            elif z[i][0] < -700:
+                z[i][0] = -700
         return 1.0 / (1.0 + np.exp(-z))
 
     def splitBatches(self, training_data, batchLength):
@@ -202,7 +212,7 @@ class Network(object):
         for x, y in batchs:
             x = self.matrixTranspose(x)
             y = self.matrixTranspose(y)
-            delta_bias, delta_weight = self.backprop(x, y)
+            delta_bias, delta_weight = self.backPropLearning(x, y)
             batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
         self.weights = [w - (1 / len(batchs)) * nw for w, nw in zip(self.weights, batch_weight)]
@@ -227,7 +237,7 @@ class Network(object):
         x = x.reshape(-1, 1)
         return x
 
-    def backprop(self, x, y):
+    def backPropLearning(self, x, y):
         biasMatrix = [np.zeros(b.shape) for b in self.biases]
         weightMatrix = [np.zeros(w.shape) for w in self.weights]
         activation = x
