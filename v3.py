@@ -2,10 +2,8 @@ import os
 import re
 import numpy as np
 import random
-import math
 import pickle
 import sys
-
 CURRENT_PATH = os.path.dirname(__file__)
 trainSet = []
 trainLable = []
@@ -17,9 +15,14 @@ def getInputs():
     options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
     # options = "t"  # test Purpose
     if options == "L" or options == "l":
-        name = str(input("Network file-name: "))
-        nnFileName = name + ".txt"
-        nnFilePath = CURRENT_PATH + "/" + nnFileName
+        while(True):
+            name = str(input("Network file-name: "))
+            nnFileName = name + ".txt"
+            nnFilePath = CURRENT_PATH + "/" + nnFileName
+            if not os.path.exists(nnFilePath):
+                print("Can not find the file")
+            else:
+                break
         print("Loading network...")
         with open(nnFilePath, "rb") as f:
             nn = pickle.load(f)
@@ -31,10 +34,10 @@ def getInputs():
             trainData = list(zip(trainSet, trainLable))
             testData = list(zip(testSet, testLabel))
             trainSetFileName, testSetFileName = getNames(resolution)
-            print("Testing on " + testSetFileName + "...")
-            print("Accuracy achieved:", nn.evaluateNetwork(testData))
             print("Testing on " + trainSetFileName + "...")
             print("Accuracy achieved:", nn.evaluateNetwork(trainData))
+            print("Testing on " + testSetFileName + "...")
+            print("Accuracy achieved:", nn.evaluateNetwork(testData))
         getInputs()
     elif options == "T" or options == "t":
         # print("train")
@@ -215,7 +218,6 @@ class Network(object):
             delta_bias, delta_weight = self.backPropLearning(x, y)
             batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
-        ############################
         newWeights = []
         for w, bw in zip(self.weights, batch_weight):
             newWeights.append(w - (1 / len(batchs)) * bw)
@@ -270,8 +272,8 @@ class Network(object):
     def getDerivativeVal(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
 
-    def getError(self, output_activations, y):
-        return output_activations - y
+    def getError(self, output, y):
+        return output - y
 
 
 if __name__ == "__main__":

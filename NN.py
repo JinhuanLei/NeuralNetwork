@@ -111,8 +111,9 @@ def backPropagationLearning(network, epoches):
                 preResult = getActivationOutputVector(network[i - 1])
                 for j in range(len(network[i])):
                     weight = network[i][j].weight
-                    bias = network[i][j].bias
-                    newResult = np.dot(preResult, weight) + bias
+                    # bias = network[i][j].bias
+                    # newResult = np.dot(preResult, weight) + bias
+                    newResult = np.dot(preResult, weight)
                     network[i][j].setActivationFunctionOutput(sigmoid(newResult))
             # Back Ward
             # Output Layer delta
@@ -137,12 +138,12 @@ def backPropagationLearning(network, epoches):
                     neu = network[i][j]
                     deriVal = getDerivativeVal(neu.aVal)
                     weight = getWeightVectorFromLastLayer(network[i + 1], j)
-                    bias = getBiasFromLastLayer(network[i + 1])
+                    # bias = getBiasFromLastLayer(network[i + 1])
                     # weight = np.array(weight)
                     # weight = weight.reshape(-1,1)
                     deltas = getDeltaVector(network[i + 1])
                     # deltas = np.array(deltas)
-                    neu.delta = (getNewDeltaVal(deltas, weight,bias)+ neu.bias)*deriVal
+                    neu.delta = (getNewDeltaVal(deltas, weight))*deriVal
                     # neu.delta = np.dot(weight,deltas)*deriVal
             for i in range(1, len(network)):
                 a = getActivationOutputVector(network[i - 1])
@@ -150,7 +151,7 @@ def backPropagationLearning(network, epoches):
                     neu = network[i][j]
                     for z in range(len(neu.weight)):
                         neu.weight[z] = neu.weight[z] + a[z] * neu.delta
-                        neu.bias = neu.bias + neu.delta
+                        # neu.bias = neu.bias + neu.delta
         if maxError < 0.01:
             print("Oppppps")
             return network
@@ -180,8 +181,9 @@ def validateNetwork(network):
             preResult = getActivationOutputVector(network[i - 1])
             for j in range(len(network[i])):
                 weight = network[i][j].weight
-                bias = network[i][j].bias
-                newResult = np.dot(preResult, weight) + bias
+                # bias = network[i][j].bias
+                # newResult = np.dot(preResult, weight) + bias
+                newResult = np.dot(preResult, weight)
                 network[i][j].setActivationFunctionOutput(sigmoid(newResult))
         outputVector = []
         for neu in network[len(network) - 1]:
@@ -230,14 +232,14 @@ def initWeight(network):
         for neuron in network[i]:
             w, b = initWeightHelper(preLayerSize)
             neuron.setWeight(w)
-            neuron.setBias(b)
+            # neuron.setBias(b)
 
 
 
-def getNewDeltaVal(preDelta, oldWeight, bias):
+def getNewDeltaVal(preDelta, oldWeight):
     count = 0.0
-    for (d, w, b) in zip(preDelta, oldWeight,bias):
-        count = count + d * w+ b*w
+    for (d, w) in zip(preDelta, oldWeight):
+        count = count + d * w
     return count
 
 
