@@ -32,7 +32,7 @@ def getInputs():
             testData = list(zip(testSet, testLabel))
             trainSetFileName, testSetFileName = getNames(resolution)
             print("Testing on " + testSetFileName + "...")
-            print("Accuracy achieved:", nn.evaluate(trainData))
+            print("Accuracy achieved:", nn.evaluateNetwork(trainData))
         getInputs()
     elif options == "T" or options == "t":
         # print("train")
@@ -191,8 +191,8 @@ class Network(object):
             for batch in batches:
                 self.updateWeight(batch)
             print("-----------------")
-            print("Epoch ", epoch, " in train_data:", self.evaluate(training_data))
-            print("Epoch ", epoch, "in test_data:", self.evaluate(test_data))
+            print("Epoch ", epoch, " in train_data:", self.evaluateNetwork(training_data))
+            print("Epoch ", epoch, "in test_data:", self.evaluateNetwork(test_data))
             print("-----------------")
 
     def sigmoid(self, z):
@@ -212,7 +212,7 @@ class Network(object):
         self.biases = [b + (1 / len(batchs)) * nb
                        for b, nb in zip(self.biases, batch_bias)]
 
-    def evaluate(self, test_data):
+    def evaluateNetwork(self, test_data):
         test_results = [(self.feedForward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
         count = 0
         for (x, y) in test_results:
