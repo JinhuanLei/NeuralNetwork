@@ -14,8 +14,8 @@ testLabel = []
 
 
 def getInputs():
-    # options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
-    options = "t"  # test Purpose
+    options = str(input("Enter L to load trained network, T to train a new one, Q to quit: "))
+    # options = "t"  # test Purpose
     if options == "L" or options == "l":
         name = str(input("Network file-name: "))
         nnFileName = name + ".txt"
@@ -37,8 +37,8 @@ def getInputs():
     elif options == "T" or options == "t":
         # print("train")
         while (True):
-            # resolution = str(input("Resolution of data (5/10/15/20): "))
-            resolution = "5"  # test Purpose
+            resolution = str(input("Resolution of data (5/10/15/20): "))
+            # resolution = "5"  # test Purpose
             if resolution != "5" and resolution != "10" and resolution != "15" and resolution != "20":
                 continue
             else:
@@ -105,11 +105,11 @@ def normaliseData(resolution):
     count = resolution * resolution
     for x in range(len(trainSet)):
         for i in range(len(trainSet[0]) - count, len(trainSet[0])):
-        # for i in range(0, len(trainSet[0])):
+            # for i in range(0, len(trainSet[0])):
             trainSet[x][i] = trainSet[x][i] / 255
     for x in range(len(testSet)):
         for i in range(len(testSet[0]) - count, len(testSet[0])):
-        # for i in range(0, len(testSet[0])):
+            # for i in range(0, len(testSet[0])):
             testSet[x][i] = testSet[x][i] / 255
 
 
@@ -161,14 +161,14 @@ class Network(object):
 
     def initWeights(self):
         list = []
-        for i in range(1,len(self.sizes)):
-            list.append(np.random.randn(self.sizes[i] , self.sizes[i-1]))
+        for i in range(1, len(self.sizes)):
+            list.append(np.random.randn(self.sizes[i], self.sizes[i - 1]))
         return list
 
     def initBias(self):
         list = []
-        for i in range(1,len(self.sizes)):
-            list.append(np.random.randn(self.sizes[i] , 1))
+        for i in range(1, len(self.sizes)):
+            list.append(np.random.randn(self.sizes[i], 1))
         return list
 
     def feedForward(self, a):
@@ -176,10 +176,10 @@ class Network(object):
             a = self.sigmoid(np.dot(w, a) + b)
         return a
 
-    def train(self, training_data, test_data, epochs ,batch):
+    def train(self, training_data, test_data, epochs, batch):
         for i in range(epochs):
             random.shuffle(training_data)
-            mini_batches = [training_data[k:k + batch] for k in range(0, len(training_data),batch)]
+            mini_batches = [training_data[k:k + batch] for k in range(0, len(training_data), batch)]
             for mini_batch in mini_batches:
                 self.updateWeight(mini_batch)
             print("epoch :", i)
