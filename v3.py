@@ -243,9 +243,8 @@ class Network(object):
         weightMatrix[len(weightMatrix)-1] = np.dot(delta, activations[len(activations)-2].transpose())
         for i in range(len(outputMatrix)-2,-1,-1):
             z = outputMatrix[i]
-            sp = self.getDerivativeVal(z)
-            # t = self.weights[-i + 1].transpose()
-            delta = np.dot(self.weights[i + 1].transpose(), delta) * sp
+            derivativeVal = self.getDerivativeVal(z)
+            delta = np.dot(self.weights[i + 1].transpose(), delta) * derivativeVal
             biasMatrix[i] = delta
             weightMatrix[i] = np.dot(delta, activations[i].transpose())
         return biasMatrix, weightMatrix
