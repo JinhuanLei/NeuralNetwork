@@ -191,9 +191,9 @@ class Network(object):
         batches = []
         iters = int(len(training_data) / batchLength)
         for i in range(iters):
-            batches.append(training_data[i * batchLength:i * batchLength + 10])
+            batches.append(training_data[i * batchLength:i * batchLength + batchLength])
         if len(training_data) % batchLength != 0:
-            batches.append(training_data[iters * 10:])
+            batches.append(training_data[iters * batchLength:])
         return batches
 
     def updateWeight(self, batchs):
