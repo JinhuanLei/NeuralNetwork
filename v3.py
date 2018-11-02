@@ -256,7 +256,7 @@ class Network(object):
             outputMatrix.append(z)
             activation = self.sigmoid(z)
             activations.append(activation)
-        delta = self.getError(activations[len(activations)-1], y) * self.getDerivativeVal(outputMatrix[-1])
+        delta = self.getError(activations[len(activations)-1], y) * self.getDerivativeVal(outputMatrix[len(outputMatrix)-1])
         biasMatrix[len(biasMatrix)-1] = delta
         weightMatrix[len(weightMatrix)-1] = np.dot(delta, activations[len(activations)-2].transpose())
         for i in range(len(outputMatrix)-2, -1, -1):
