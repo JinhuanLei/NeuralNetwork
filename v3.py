@@ -231,7 +231,8 @@ class Network(object):
         biasMatrix = [np.zeros(b.shape) for b in self.biases]
         weightMatrix = [np.zeros(w.shape) for w in self.weights]
         activation = x
-        activations = [x]
+        activations = []
+        activations.append(activation)
         outputMatrix = []
         for (b, w) in zip(self.biases, self.weights):
             z = np.dot(w, activation) + b
