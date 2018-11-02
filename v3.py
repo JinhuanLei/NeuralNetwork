@@ -32,9 +32,9 @@ def getInputs():
             testData = list(zip(testSet, testLabel))
             trainSetFileName, testSetFileName = getNames(resolution)
             print("Testing on " + testSetFileName + "...")
-            print("Accuracy achieved:", nn.evaluate(testData))
+            print("Accuracy achieved:", nn.evaluateNetwork(testData))
             print("Testing on " + trainSetFileName + "...")
-            print("Accuracy achieved:", nn.evaluate(trainData))
+            print("Accuracy achieved:", nn.evaluateNetwork(trainData))
         getInputs()
     elif options == "T" or options == "t":
         # print("train")
@@ -134,8 +134,8 @@ def initNN(trainSetFileName, testSetFileName, resolution):
     print("Training on " + trainSetFileName + "...")
     nn.train(trainData, testData, 50, 1)
     print("epoch :", 50)
-    print("training Accurate :", nn.evaluate(trainData))
-    print("testing Accurate :", nn.evaluate(testData))
+    print("training Accurate :", nn.evaluateNetwork(trainData))
+    print("testing Accurate :", nn.evaluateNetwork(testData))
     saveNetwork(nn)
 
 
@@ -184,8 +184,8 @@ class Network(object):
             for batch in batches:
                 self.updateWeight(batch)
             # print("epoch :", i)
-            # print("training Accurate :", self.evaluate(training_data))
-            # print("testing Accurate :", self.evaluate(test_data))
+            # print("training Accurate :", self.evaluateNetwork(training_data))
+            # print("testing Accurate :", self.evaluateNetwork(test_data))
 
     def sigmoid(self, z):
         # z = z.astype(np.float64)
@@ -215,16 +215,23 @@ class Network(object):
             delta_bias, delta_weight = self.backPropLearning(x, y)
             batch_bias = [b + delta for b, delta in zip(batch_bias, delta_bias)]
             batch_weight = [weight + delta for weight, delta in zip(batch_weight, delta_weight)]
-        self.weights = [w - (1 / len(batchs)) * nw for w, nw in zip(self.weights, batch_weight)]
-        self.biases = [b - (1 / len(batchs)) * nb for b, nb in zip(self.biases, batch_bias)]
+        ############################
+        newWeights = []
+        for w, bw in zip(self.weights, batch_weight):
+            newWeights.append(w - (1 / len(batchs)) * bw)
+        self.weights = newWeights
+        newBias = []
+        for b, bb in zip(self.biases, batch_bias):
+            newBias.append(b - (1 / len(batchs)) * bb)
+        self.biases = newBias
 
-    def evaluate(self, test_data):
+
+    def evaluateNetwork(self, test_data):
         test_results = [(self.feedForward(self.matrixTranspose(x)), self.matrixTranspose(y)) for (x, y) in test_data]
         count = 0
         for (x, y) in test_results:
             maxVal = x.max()
             maxIndex = (np.where(x == maxVal))[0]
-            # print(y[maxIndex], maxVal)
             if y[maxIndex] == 1.0:
                 count += 1
         return count / len(test_results)
@@ -252,7 +259,7 @@ class Network(object):
         delta = self.getError(activations[len(activations)-1], y) * self.getDerivativeVal(outputMatrix[-1])
         biasMatrix[len(biasMatrix)-1] = delta
         weightMatrix[len(weightMatrix)-1] = np.dot(delta, activations[len(activations)-2].transpose())
-        for i in range(len(outputMatrix)-2,-1,-1):
+        for i in range(len(outputMatrix)-2, -1, -1):
             z = outputMatrix[i]
             derivativeVal = self.getDerivativeVal(z)
             delta = np.dot(self.weights[i + 1].transpose(), delta) * derivativeVal
