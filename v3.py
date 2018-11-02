@@ -32,6 +32,8 @@ def getInputs():
             testData = list(zip(testSet, testLabel))
             trainSetFileName, testSetFileName = getNames(resolution)
             print("Testing on " + testSetFileName + "...")
+            print("Accuracy achieved:", nn.evaluate(testData))
+            print("Testing on " + trainSetFileName + "...")
             print("Accuracy achieved:", nn.evaluate(trainData))
         getInputs()
     elif options == "T" or options == "t":
@@ -44,10 +46,6 @@ def getInputs():
             else:
                 loadData(resolution)
                 normaliseData(int(resolution))
-                # if resolution == "5":
-                #     resolution = "0" + resolution
-                # trainSetFileName = "trainSet_" + resolution + ".dat"
-                # testSetFileName = "testSet_" + resolution + ".dat"
                 trainSetFileName, testSetFileName = getNames(resolution)
                 initNN(trainSetFileName, testSetFileName, int(resolution))
     else:
@@ -176,18 +174,27 @@ class Network(object):
             a = self.sigmoid(np.dot(w, a) + b)
         return a
 
-    def train(self, training_data, test_data, epochs, batch):
+    def train(self, training_data, test_data, epochs, batchLength):
         for i in range(epochs):
             random.shuffle(training_data)
-            mini_batches = [training_data[k:k + batch] for k in range(0, len(training_data), batch)]
-            for mini_batch in mini_batches:
-                self.updateWeight(mini_batch)
+            batches = self.splitBatches(training_data, batchLength)
+            for batch in batches:
+                self.updateWeight(batch)
             print("epoch :", i)
             print("training Accurate :", self.evaluate(training_data))
             print("testing Accurate :", self.evaluate(test_data))
 
     def sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
+
+    def splitBatches(self, training_data, batchLength):
+        batches = []
+        iters = int(len(training_data) / batchLength)
+        for i in range(iters):
+            batches.append(training_data[i * batchLength:i * batchLength + 10])
+        if len(training_data) % batchLength != 0:
+            batches.append(training_data[iters * 10:])
+        return batches
 
     def updateWeight(self, batchs):
         batch_bias = [np.zeros(b.shape) for b in self.biases]
